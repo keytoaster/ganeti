@@ -221,6 +221,13 @@ def _CheckIfConnectionDropped(sock):
   # The connection was terminated
   except OpenSSL.SSL.SysCallError:
     return True
+  # The usual EAGAIN is raised when the read would block, but only if SSL is
+  # disabled (The SSL case is covered by WantReadError above).
+  except socket.error as err:
+    if getattr(err, 'errno') == errno.EAGAIN:
+      return False
+    else:
+      raise
   return False
 
 
